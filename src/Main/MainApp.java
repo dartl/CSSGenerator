@@ -20,7 +20,7 @@ public class MainApp extends Application {
     private Parent rootLayout;
     private List<Tag> tags = new LinkedList<Tag>();
     private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\index.html");
-    private File fileSoloTags = new File("soloTags");
+    private File fileSoloTags = new File("F:\\JavaProjects\\CSSGenerator\\src\\soloTags.txt");
     private String codeHTML = new String();
     private String codeCSS = new String();
     private String soloTags = new String();
@@ -48,6 +48,7 @@ public class MainApp extends Application {
         this.primaryStage.setTitle("CSSGenerator");
         try {
             codeHTML = new Scanner(file).useDelimiter("\\Z").next();
+            soloTags = new Scanner(fileSoloTags).useDelimiter("\\Z").next();
         } catch (Exception ex) {
         }
         chooseTag();
@@ -111,6 +112,9 @@ public class MainApp extends Application {
                         attrStart = iEnd + 2;
                         checkEndTagBracket = searchEndTagBracket(iCurrent);
                         while (true) {
+                            if (checkEndTagBracket <= attrStart) {
+                                break;
+                            }
                             attrEnd = searchNextAttr(iCurrent) + 1;
                             iCurrent = attrStart;
                             attrValueStart = attrEnd + 2;
@@ -122,14 +126,14 @@ public class MainApp extends Application {
                                 temp_Id = codeHTML.substring(attrValueStart, attrValueEnd);
                             }
                             attrStart = attrValueEnd + 2;
-                            if (checkEndTagBracket < attrStart) {
-                                break;
-                            }
                         }
                     }
                     temp = new Tag(codeHTML.substring(iStart, iEnd+1), temp_Class, temp_Id); // создаем экземпляр тега
-                    if (haveChildren()) {
+                    if (haveChildren() && !isSoloTag(temp)) {
                         temp.setChildrenTags(addTag());
+                    }
+                    if (isSoloTag(temp)) {
+                        temp.setDoubleTag(false);
                     }
                     Tags.add(temp); // сохраняем тег в структуре
                 } catch (Exception ex) {
@@ -139,7 +143,7 @@ public class MainApp extends Application {
             }
             else {
                 iCurrent++; // двигаем указатель на один вперед
-                if (codeHTML.substring(iCurrent, iCurrent + temp.getName().length()).equals(temp.getName())) {
+                if (codeHTML.substring(iCurrent, iCurrent + temp.getName().length()).equals(temp.getName()) || isSoloTag(temp)) {
                     break;
                 }
             }
@@ -172,17 +176,17 @@ public class MainApp extends Application {
      * @return
      */
     private int searchEndTag(int iCurrent) {
-        int i, j;
+        int i, j, k;
         i = codeHTML.indexOf(" ",iCurrent);
         j = codeHTML.indexOf(">",iCurrent);
-        if (i<j && i != -1) {
+        if (i < j && i != -1) {
             return i - 1;   // тег с атрибутами
         }
-        else {
-            if (j != -1)
-            {
-                return j-1; // тег закончился
+        else if (j != -1) {
+            if (codeHTML.charAt(j-1) == '/') {
+                return j-2; // тег закончился
             }
+            return j-1; // тег закончился
         }
         //System.out.println(i);
         return -1;
@@ -273,6 +277,18 @@ public class MainApp extends Application {
             }
         }
         return true;
+    }
+
+    /**
+     * Является ли тег одинарным
+     * @param temp
+     * @return
+     */
+    private boolean isSoloTag(Tag temp) {
+        if(soloTags.indexOf(temp.getName()) != -1) {
+            return true;
+        }
+        return false;
     }
 
 

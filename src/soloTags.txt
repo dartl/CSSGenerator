@@ -1,1 +1,1 @@
-img input br
+img input br hr
