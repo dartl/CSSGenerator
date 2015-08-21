@@ -5,17 +5,24 @@ import java.util.List;
 
 public class Tag {
     String name;                                    // Название тега
-    boolean doubleTag;                              // Является ли тег двойным
+    String class_tag;                               // Классы тега
+    String id;                                      // Id тега
+    boolean doubleTag = true;                       // Является ли тег двойным
     List<Tag> childrenTags = new LinkedList<Tag>(); // Дочерние теги
 
     public Tag(String name) {
         this.name = name;
-        this.doubleTag = true;
     }
 
     public Tag(String name, boolean doubleTag) {
         this.name = name;
         this.doubleTag = doubleTag;
+    }
+
+    public Tag(String name, String class_tag, String id) {
+        this.name = name;
+        this.class_tag = class_tag;
+        this.id = id;
     }
 
     public Tag(String name, boolean doubleTag, List<Tag> childrenTags) {
@@ -48,25 +55,19 @@ public class Tag {
         this.childrenTags = childrenTags;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Tag tag = (Tag) o;
-
-        if (doubleTag != tag.doubleTag) return false;
-        if (childrenTags != null ? !childrenTags.equals(tag.childrenTags) : tag.childrenTags != null) return false;
-        if (name != null ? !name.equals(tag.name) : tag.name != null) return false;
-
-        return true;
+    public String getClass_tag() {
+        return class_tag;
     }
 
-    @Override
-    public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (doubleTag ? 1 : 0);
-        result = 31 * result + (childrenTags != null ? childrenTags.hashCode() : 0);
-        return result;
+    public void setClass_tag(String class_tag) {
+        this.class_tag = class_tag;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
