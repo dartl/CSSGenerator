@@ -20,8 +20,27 @@ public class MainApp extends Application {
     private Parent rootLayout;
     private List<Tag> tags = new LinkedList<Tag>();
     private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\index.html");
+    private File fileSoloTags = new File("soloTags");
     private String codeHTML = new String();
     private String codeCSS = new String();
+    private String soloTags = new String();
+
+    /*
+        Индоксовые переменные
+     */
+    private int iStart = 0,             // Индекс начала тега
+            iEnd;               // индекс конца названия тега
+    private int iCurrent;               // Индекс текущего положения поиска
+    private int attrStart = 0,          // Индекс начала атрибута
+            attrEnd = 0;        // Индекс конца трибута
+    private int attrValueStart = 0,     // Индекс начала значения атрибута
+            attrValueEnd = 0;   // Индекс конца значения атрибута
+    private int checkEndTagBracket;     // Индекс закрывающей скобки тега
+
+    private String temp_Class = null,          // Содержит класс текущего тега
+            temp_Id = null;            // Содержит идентификатор текущего тега
+
+    private int iTab = 0;              // Уровень табуляции
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -62,20 +81,19 @@ public class MainApp extends Application {
      * @return
      */
     private boolean chooseTag() {
-        int iStart = 0,             // Индекс начала тега
-                iEnd;               // индекс конца названия тега
-        int iCurrent;               // Индекс текущего положения поиска
-        int attrStart = 0,          // Индекс начала атрибута
-                attrEnd = 0;        // Индекс конца трибута
-        int attrValueStart = 0,     // Индекс начала значения атрибута
-                attrValueEnd = 0;   // Индекс конца значения атрибута
-        int checkEndTagBracket;     // Индекс закрывающей скобки тега
-
-        String temp_Class = null,          // Содержит класс текущего тега
-                temp_Id = null;            // Содержит идентификатор текущего тега
 
         iCurrent = codeHTML.indexOf("body");  // Задаем начальный указатель на тело документа
+        tags = addTag();
 
+        return false;
+    }
+
+    /**
+     * Добавление нового тега
+     */
+    private List<Tag> addTag() {
+        List<Tag> Tags = new LinkedList<Tag>();
+        Tag temp = new Tag(null); // создаем экземпляр тега
         while(iCurrent != codeHTML.length() && iStart != -2) {
 
             temp_Class = null;
@@ -109,17 +127,24 @@ public class MainApp extends Application {
                             }
                         }
                     }
-                    Tag temp = new Tag(codeHTML.substring(iStart, iEnd+1), temp_Class, temp_Id); // создаем экземпляр тега
-                    tags.add(temp); // сохраняем тег в структуре
+                    temp = new Tag(codeHTML.substring(iStart, iEnd+1), temp_Class, temp_Id); // создаем экземпляр тега
+                    if (haveChildren()) {
+                        temp.setChildrenTags(addTag());
+                    }
+                    Tags.add(temp); // сохраняем тег в структуре
                 } catch (Exception ex) {
+                   ex.printStackTrace(System.out);
                 }
 
             }
             else {
                 iCurrent++; // двигаем указатель на один вперед
+                if (codeHTML.substring(iCurrent, iCurrent + temp.getName().length()).equals(temp.getName())) {
+                    break;
+                }
             }
         }
-        return false;
+        return Tags;
     }
 
     /**
@@ -205,21 +230,51 @@ public class MainApp extends Application {
     }
 
     /**
+     *
+     */
+    private boolean haveChildren() {
+        int i;
+        i = codeHTML.indexOf("<",iCurrent);
+        if (codeHTML.charAt(i+1) != '!' && codeHTML.charAt(i+1) != '/' ) {
+            return true;  // есть дочерние елементы
+        }
+        return false;
+    }
+
+    /**
      * Тестовая печать информации о теге
      * @return
      */
     private boolean printCodeHTML() {
         codeHTML = "";
-        for (int i = 0; i < tags.size(); i++) {
-            codeHTML += tags.get(i).getName();
+        printCodeHTMLrecurs(tags);
+        return true;
+    }
+
+    /**
+     * Тестовая печать информации о теге
+     * @return
+     */
+    private boolean printCodeHTMLrecurs(List<Tag> tag) {
+        for (int i = 0; i < tag.size(); i++) {
+            for (int j = 0; j < iTab; j++) {
+                codeHTML += '\t';
+            }
+            codeHTML += tag.get(i).getName();
             codeHTML += ".";
-            codeHTML += tags.get(i).getClass_tag();
+            codeHTML += tag.get(i).getClass_tag();
             codeHTML += "#";
-            codeHTML += tags.get(i).getId();
+            codeHTML += tag.get(i).getId();
             codeHTML += "\n";
+            if (tag.get(i).getChildrenTags().size() != 0) {
+                iTab++;
+                printCodeHTMLrecurs(tag.get(i).getChildrenTags());
+                iTab--;
+            }
         }
         return true;
     }
+
 
     public String getCodeHTML() {
         return codeHTML;
