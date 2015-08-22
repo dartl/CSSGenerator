@@ -19,7 +19,7 @@ public class MainApp extends Application {
     private Stage primaryStage;
     private Parent rootLayout;
     private List<Tag> tags = new LinkedList<Tag>();
-    private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\1.html");
+    private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\index.html");
     private File fileSoloTags = new File("F:\\JavaProjects\\CSSGenerator\\src\\soloTags.txt");
     private String codeHTML = new String();
     private String codeCSS = new String();
@@ -41,6 +41,7 @@ public class MainApp extends Application {
         } catch (Exception ex) {
         }
         chooseTag();
+        searchDoubleTags(tags);
         printCodeHTML();
         initRootLayout();
     }
@@ -84,13 +85,20 @@ public class MainApp extends Application {
         List<Tag> Tags = new LinkedList<Tag>();
         Tag tag = new Tag("null"); // создаем экземпляр тега
         int checkCurrent = 0;
+        String tempComment;
+
         while(iCurrent <= codeHTML.length()) {
 
             checkCurrent = searchNextTag(iCurrent); // находим начало следующего тега
-            if (checkCurrent == -2) { // если следующего тега нету - заканчиваем работу
+            if (checkCurrent == -1) { // если следующего тега нету - заканчиваем работу
                 break;
             }
-            if (checkCurrent != -1) { // если это начало тега а не конец или комментарий, то
+            if (checkCurrent == -3) {
+                Tags.get(Tags.size()-1).setComment(searchComment(iCurrent));
+                iCurrent = codeHTML.indexOf("-->", iCurrent);
+                checkCurrent = searchNextTag(iCurrent); // находим начало следующего тега
+            }
+            if (checkCurrent != -2) { // если это начало тега а не конец или комментарий, то
                 Tag tempTag = addTag(iCurrent); // Получаем текущий тег
                 iCurrent++; // меняем указатель
                 tag =  new Tag(tempTag.getName(), tempTag.getClass_tag(), tempTag.getId());
@@ -111,7 +119,7 @@ public class MainApp extends Application {
                 l = searchStartTagBracket(l) + 2; // находим начало следующего тега
                 /*System.out.println(parent.getName() + " + " + codeHTML.substring(l, l + parent.getName().length() + 1) +
                 " = " + codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName()));*/
-                if (codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName())) {
+                if (codeHTML.substring(l, l + parent.getName().length() + 1).equals("/" + parent.getName())) {
                     break;
                 }
             }
@@ -120,18 +128,21 @@ public class MainApp extends Application {
     }
 
     /**
-     * Поиск следующего тега
+     * Поиск начала имени следующего тега
      * @return
      */
     private int searchNextTag(int iCurrent) {
         int i;
         i = codeHTML.indexOf("<",iCurrent);
         if (i == -1) {
-            return -2;  // Больше тегов нету
+            return -1;  // Больше тегов нету
         }
         if (codeHTML.charAt(i+1) == '/' ) {
             this.iCurrent = i + 1;
-            return -1;  // Это не рабочий тег
+            return -2;  // Это не рабочий тег
+        }
+        else if (codeHTML.charAt(i+1) == '!' ) {
+            return -3;  // Это комментарий
         }
         else {
             this.iCurrent = i + 1;
@@ -140,7 +151,7 @@ public class MainApp extends Application {
     }
 
     /**
-     * Поиск конца начального тега
+     * Поиск конца имени тега
      * @param iCurrent
      * @return
      */
@@ -190,7 +201,7 @@ public class MainApp extends Application {
     }
 
     /**
-     * Поиск конца атрибута
+     * Поиск конца названия атрибута
      * @param iCurrent
      * @return
      */
@@ -204,7 +215,7 @@ public class MainApp extends Application {
     }
 
     /**
-     *
+     * Проверка - есть ли у текущего тега дочерние элементы
      */
     private boolean haveChildren() {
         int i;
@@ -213,51 +224,6 @@ public class MainApp extends Application {
             return true;  // есть дочерние елементы
         }
         return false;
-    }
-
-    /**
-     *
-     */
-    private boolean haveEnd(String text) {
-        int current = codeHTML.indexOf("</",iCurrent);
-        if (codeHTML.substring(current,current + text.length() + 2).indexOf("</"+text) != -1 ) {
-            return true;  // есть дочерние елементы
-        }
-        return false;
-    }
-
-    /**
-     * Тестовая печать информации о теге
-     * @return
-     */
-    private boolean printCodeHTML() {
-        codeHTML = "";
-        printCodeHTMLrecurs(tags);
-        return true;
-    }
-
-    /**
-     * Тестовая печать информации о теге
-     * @return
-     */
-    private boolean printCodeHTMLrecurs(List<Tag> tag) {
-        for (int i = 0; i < tag.size(); i++) {
-            for (int j = 0; j < iTab; j++) {
-                codeHTML += '\t';
-            }
-            codeHTML += tag.get(i).getName();
-            codeHTML += ".";
-            codeHTML += tag.get(i).getClass_tag();
-            codeHTML += "#";
-            codeHTML += tag.get(i).getId();
-            codeHTML += "\n";
-            if (tag.get(i).getChildrenTags().size() != 0) {
-                iTab++;
-                printCodeHTMLrecurs(tag.get(i).getChildrenTags());
-                iTab--;
-            }
-        }
-        return true;
     }
 
     /**
@@ -279,7 +245,7 @@ public class MainApp extends Application {
      * @return
      */
     private String searchComment(int iCurrent) {
-        return codeHTML.substring(iCurrent,codeHTML.indexOf("-->"));
+        return codeHTML.substring(codeHTML.indexOf("<!--") + 4,codeHTML.indexOf("-->"));
     }
 
     /**
@@ -321,6 +287,63 @@ public class MainApp extends Application {
         return tag;
     }
 
+    /**
+     * Тестовая печать информации о теге
+     * @return
+     */
+    private boolean printCodeHTML() {
+        codeHTML = "";
+        String selector = "body";
+        printCodeHTMLrecurs(tags, selector);
+        return true;
+    }
+
+    /**
+     * Тестовая печать информации о теге
+     * @return
+     */
+    private boolean printCodeHTMLrecurs(List<Tag> tag, String selector) {
+        String temp_selector = selector;
+        for (int i = 0; i < tag.size(); i++) {
+            for (int j = 0; j < iTab; j++) {
+                codeHTML += '\t';
+            }
+            temp_selector += " " + tag.get(i).getName();
+            temp_selector += "." + tag.get(i).getClass_tag();
+            temp_selector += "#" + tag.get(i).getId();
+            codeHTML += temp_selector + "{\n";
+            for (int j = 0; j < iTab; j++) {
+                codeHTML += '\t';
+            }
+            codeHTML += temp_selector + "}";
+            codeHTML += "\n";
+            if (tag.get(i).getChildrenTags().size() != 0) {
+                iTab++;
+                printCodeHTMLrecurs(tag.get(i).getChildrenTags(), temp_selector);
+                iTab--;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Избавляемся от большинства ненужных повторяющихся элементов
+     * @param tags
+     */
+    private void searchDoubleTags(List<Tag> tags) {
+        for (int  i = 0; i < tags.size(); i ++) {
+            for (int  j = 0; j < tags.size(); j ++) {
+                if (i != j && tags.get(i).equals(tags.get(j))) {
+                    tags.remove(j);
+                }
+            }
+        }
+        for (int  i = 0; i < tags.size(); i ++) {
+            if (tags.get(i).getChildrenTags() != null) {
+                searchDoubleTags(tags.get(i).getChildrenTags());
+            }
+        }
+    }
 
     public String getCodeHTML() {
         return codeHTML;

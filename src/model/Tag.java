@@ -79,4 +79,32 @@ public class Tag {
     public void setId(String id) {
         this.id = id;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Tag)) return false;
+
+        Tag tag = (Tag) o;
+
+        if (doubleTag != tag.doubleTag) return false;
+        if (childrenTags != null ? !childrenTags.equals(tag.childrenTags) : tag.childrenTags != null) return false;
+        if (class_tag != null ? !class_tag.equals(tag.class_tag) : tag.class_tag != null) return false;
+        if (comment != null ? !comment.equals(tag.comment) : tag.comment != null) return false;
+        if (id != null ? !id.equals(tag.id) : tag.id != null) return false;
+        if (name != null ? !name.equals(tag.name) : tag.name != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (class_tag != null ? class_tag.hashCode() : 0);
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (doubleTag ? 1 : 0);
+        result = 31 * result + (childrenTags != null ? childrenTags.hashCode() : 0);
+        result = 31 * result + (comment != null ? comment.hashCode() : 0);
+        return result;
+    }
 }
