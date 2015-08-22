@@ -19,7 +19,7 @@ public class MainApp extends Application {
     private Stage primaryStage;
     private Parent rootLayout;
     private List<Tag> tags = new LinkedList<Tag>();
-    private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\index.html");
+    private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\1.html");
     private File fileSoloTags = new File("F:\\JavaProjects\\CSSGenerator\\src\\soloTags.txt");
     private String codeHTML = new String();
     private String codeCSS = new String();
@@ -304,26 +304,39 @@ public class MainApp extends Application {
      */
     private boolean printCodeHTMLrecurs(List<Tag> tag, String selector) {
         String temp_selector = selector;
+        String temp;
+
         for (int i = 0; i < tag.size(); i++) {
-            for (int j = 0; j < iTab; j++) {
-                codeHTML += '\t';
+            temp = temp_selector + " " + tag.get(i).getName();
+            printSelector(temp);
+            if (tag.get(i).getClass_tag() != null) {
+                printSelector(temp + "." + tag.get(i).getClass_tag());
             }
-            temp_selector += " " + tag.get(i).getName();
-            temp_selector += "." + tag.get(i).getClass_tag();
-            temp_selector += "#" + tag.get(i).getId();
-            codeHTML += temp_selector + "{\n";
-            for (int j = 0; j < iTab; j++) {
-                codeHTML += '\t';
+            if (tag.get(i).getId() != null) {
+                printSelector(temp + "#" + tag.get(i).getId());
             }
-            codeHTML += temp_selector + "}";
-            codeHTML += "\n";
             if (tag.get(i).getChildrenTags().size() != 0) {
                 iTab++;
-                printCodeHTMLrecurs(tag.get(i).getChildrenTags(), temp_selector);
+                printCodeHTMLrecurs(tag.get(i).getChildrenTags(), temp);
                 iTab--;
             }
         }
         return true;
+    }
+
+    /**
+     * Печать одного селектора
+     */
+    private void printSelector(String selector) {
+        for (int j = 0; j < iTab; j++) {
+            codeHTML += '\t';
+        }
+        codeHTML += selector + "{\n";
+        for (int j = 0; j < iTab; j++) {
+            codeHTML += '\t';
+        }
+        codeHTML += "}";
+        codeHTML += "\n";
     }
 
     /**
