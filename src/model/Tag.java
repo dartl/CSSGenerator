@@ -9,6 +9,7 @@ public class Tag {
     String id;                                      // Id тега
     boolean doubleTag = true;                       // Является ли тег двойным
     List<Tag> childrenTags = new LinkedList<Tag>(); // Дочерние теги
+    String comment;                                 // Комментарий к тегу
 
     public Tag(String name) {
         this.name = name;
@@ -29,6 +30,14 @@ public class Tag {
         this.name = name;
         this.doubleTag = doubleTag;
         this.childrenTags = childrenTags;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String commentStart) {
+        this.comment = commentStart;
     }
 
     public String getName() {

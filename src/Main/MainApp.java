@@ -26,20 +26,9 @@ public class MainApp extends Application {
     private String soloTags = new String();
 
     /*
-        Индоксовые переменные
+        Индексовые переменные
      */
-    private int iStart = 0,             // Индекс начала тега
-            iEnd;               // индекс конца названия тега
-    private int iCurrent;               // Индекс текущего положения поиска
-    private int attrStart = 0,          // Индекс начала атрибута
-            attrEnd = 0;        // Индекс конца трибута
-    private int attrValueStart = 0,     // Индекс начала значения атрибута
-            attrValueEnd = 0;   // Индекс конца значения атрибута
-    private int checkEndTagBracket;     // Индекс закрывающей скобки тега
-
-    private String temp_Class = null,          // Содержит класс текущего тега
-            temp_Id = null;            // Содержит идентификатор текущего тега
-
+    private int iCurrent;              // Индекс текущего положения поиска
     private int iTab = 0;              // Уровень табуляции
 
     @Override
@@ -82,68 +71,46 @@ public class MainApp extends Application {
      * @return
      */
     private boolean chooseTag() {
-
-        iCurrent = codeHTML.indexOf("body");  // Задаем начальный указатель на тело документа
-        tags = addTag();
-
+        iCurrent = codeHTML.indexOf("body") + 1;  // Задаем начальный указатель на тело документа
+        Tag parent = new Tag("body");
+        tags = addTag(parent);
         return false;
     }
 
     /**
      * Добавление нового тега
      */
-    private List<Tag> addTag() {
+    private List<Tag> addTag(Tag parent) {
         List<Tag> Tags = new LinkedList<Tag>();
-        Tag temp = new Tag(null); // создаем экземпляр тега
-        while(iCurrent != codeHTML.length() && iStart != -2) {
+        Tag tag = new Tag("null"); // создаем экземпляр тега
+        int checkCurrent = 0;
+        while(iCurrent <= codeHTML.length()) {
 
-            temp_Class = null;
-            temp_Id = null;
-
-            iStart = searchNextTag(iCurrent); // находим начало следующего тега
-            if (iStart == -2) { // если следующего тега нету - заканчиваем работу
+            checkCurrent = searchNextTag(iCurrent); // находим начало следующего тега
+            if (checkCurrent == -2) { // если следующего тега нету - заканчиваем работу
                 break;
             }
-            if (iStart != -1) { // если это начало тега а не конец или комментарий, то
-                iCurrent = iStart + 1;          // меняем указатель
-                iEnd = searchEndTag(iCurrent);  // находим конец имени тега
-                try {
-                    if (codeHTML.charAt(iEnd+1) == ' ') {
-                        attrStart = iEnd + 2;
-                        checkEndTagBracket = searchEndTagBracket(iCurrent);
-                        while (true) {
-                            if (checkEndTagBracket <= attrStart) {
-                                break;
-                            }
-                            attrEnd = searchNextAttr(iCurrent) + 1;
-                            iCurrent = attrStart;
-                            attrValueStart = attrEnd + 2;
-                            iCurrent = attrValueStart;
-                            attrValueEnd = searchEndAttr(iCurrent);
-                            if (codeHTML.substring(attrStart, attrEnd).equals("class")) {
-                                temp_Class = codeHTML.substring(attrValueStart, attrValueEnd);
-                            } else if (codeHTML.substring(attrStart, attrEnd).equals("id")) {
-                                temp_Id = codeHTML.substring(attrValueStart, attrValueEnd);
-                            }
-                            attrStart = attrValueEnd + 2;
-                        }
-                    }
-                    temp = new Tag(codeHTML.substring(iStart, iEnd+1), temp_Class, temp_Id); // создаем экземпляр тега
-                    if (haveChildren() && !isSoloTag(temp)) {
-                        temp.setChildrenTags(addTag());
-                    }
-                    if (isSoloTag(temp)) {
-                        temp.setDoubleTag(false);
-                    }
-                    Tags.add(temp); // сохраняем тег в структуре
-                } catch (Exception ex) {
-                   ex.printStackTrace(System.out);
+            if (checkCurrent != -1) { // если это начало тега а не конец или комментарий, то
+                System.out.println(codeHTML.charAt(iCurrent));
+                Tag tempTag = addTag(iCurrent); // Получаем текущий тег
+                iCurrent++; // меняем указатель
+                tag =  new Tag(tempTag.getName(), tempTag.getClass_tag(), tempTag.getId());
+                if (haveChildren() && !isSoloTag(tag)) {
+                    tag.setChildrenTags(addTag(tag));
                 }
-
+                if (isSoloTag(tag)) {
+                    tag.setDoubleTag(false);
+                }
+                Tags.add(tag);  // Добавляем тег
             }
             else {
                 iCurrent++; // двигаем указатель на один вперед
-                if (codeHTML.substring(iCurrent, iCurrent + temp.getName().length()).equals(temp.getName()) || isSoloTag(temp)) {
+                int l = iCurrent;
+                l = searchStartTagBracket(l) + 2; // находим начало следующего тега
+                System.out.println(parent.getName());
+                System.out.println(codeHTML.substring(l, l + parent.getName().length() + 1));
+                System.out.println(codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName()));
+                if (codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName()) || isSoloTag(tag)) {
                     break;
                 }
             }
@@ -158,14 +125,15 @@ public class MainApp extends Application {
     private int searchNextTag(int iCurrent) {
         int i;
         i = codeHTML.indexOf("<",iCurrent);
-        //System.out.println(i);
         if (i == -1) {
             return -2;  // Больше тегов нету
         }
-        if (codeHTML.charAt(i+1) == '!' || codeHTML.charAt(i+1) == '/' ) {
+        if (codeHTML.charAt(i+1) == '/' ) {
+            this.iCurrent = i + 1;
             return -1;  // Это не рабочий тег
         }
         else {
+            this.iCurrent = i + 1;
             return i+1; // Начало имени тега
         }
     }
@@ -207,14 +175,15 @@ public class MainApp extends Application {
     }
 
     /**
-     * Поиск следующего атрибута
+     * Поиск следующей открывающей скобки
+     * @param iCurrent
      * @return
      */
-    private int searchNextAttr(int iCurrent) {
-        int i;
-        i = codeHTML.indexOf("=",iCurrent);
-        if (i != -1) {
-            return i-1; // вернуть конец имени атрибута
+    private int searchStartTagBracket(int iCurrent) {
+        int j;
+        j = codeHTML.indexOf("<",iCurrent);
+        if (j != -1) {
+            return j - 1; // тег закончился
         }
         return -1;
     }
@@ -224,9 +193,9 @@ public class MainApp extends Application {
      * @param iCurrent
      * @return
      */
-    private int searchEndAttr(int iCurrent) {
+    private int searchEndAttr(int iCurrent, String txt) {
         int i;
-        i = codeHTML.indexOf('"',iCurrent);
+        i = txt.indexOf('"',iCurrent);
         if (i != -1) {
             return i; // вернуть конец значения атрибута
         }
@@ -240,6 +209,19 @@ public class MainApp extends Application {
         int i;
         i = codeHTML.indexOf("<",iCurrent);
         if (codeHTML.charAt(i+1) != '!' && codeHTML.charAt(i+1) != '/' ) {
+            return true;  // есть дочерние елементы
+        }
+        return false;
+    }
+
+    /**
+     *
+     */
+    private boolean haveEnd(String text) {
+        int current = codeHTML.indexOf("</",iCurrent);
+        System.out.println(codeHTML.charAt(current));
+        System.out.println(codeHTML.substring(current, current + text.length() + 2));
+        if (codeHTML.substring(current,current + text.length() + 2).indexOf("</"+text) != -1 ) {
             return true;  // есть дочерние елементы
         }
         return false;
@@ -289,6 +271,53 @@ public class MainApp extends Application {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Поиск комментария
+     * @return
+     */
+    private String searchComment(int iCurrent) {
+        return codeHTML.substring(iCurrent,codeHTML.indexOf("-->"));
+    }
+
+    /**
+     * Обработка тега
+     * @return
+     */
+    private Tag addTag(int сurrent) {
+        int iStart = 0,             // Индекс начала тега
+                iEnd;               // индекс конца названия тега
+        int attrValueEnd = 0;       // Индекс конца значения атрибута
+        int checkEndTagBracket;     // Индекс закрывающей скобки тега
+        String textAtrr;            // Весь тег
+
+        iStart = сurrent;           // Начало тега
+        checkEndTagBracket = searchEndTagBracket(сurrent); // находим конец первого тега ">"
+
+        textAtrr = codeHTML.substring(iStart,checkEndTagBracket+1); // Ищем конец атрибута
+
+        Tag tag = new Tag("null"); // Создаем тег
+        iEnd = сurrent = searchEndTag(сurrent);  // Ищем конец названия тега
+        tag.setName(textAtrr.substring(0,iEnd-iStart+1));   // Устанавливаем имя тега
+        сurrent = iEnd-iStart+1;
+        int i = textAtrr.indexOf("class");  //  Находим начало класса у тега
+        if(i != -1) {
+            attrValueEnd = searchEndAttr(i+7, textAtrr);  // Ищем конец значения атрибута
+            tag.setClass_tag(textAtrr.substring(i+7, attrValueEnd)); // Добавляем класс
+            сurrent = attrValueEnd + 1;
+        }
+
+        int j = textAtrr.indexOf("id");  //  Находим начало идентификатора
+        if(j != -1) {
+            attrValueEnd = searchEndAttr(j+4, textAtrr);  // Ищем конец значения атрибута
+            tag.setId(textAtrr.substring(j + 4, attrValueEnd)); // Добавляем идентификатор
+            сurrent = attrValueEnd + 1;
+        }
+
+        iCurrent += сurrent;
+
+        return tag;
     }
 
 
