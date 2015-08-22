@@ -19,11 +19,11 @@ public class MainApp extends Application {
     private Stage primaryStage;
     private Parent rootLayout;
     private List<Tag> tags = new LinkedList<Tag>();
-    private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\index.html");
+    private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\1.html");
     private File fileSoloTags = new File("F:\\JavaProjects\\CSSGenerator\\src\\soloTags.txt");
     private String codeHTML = new String();
     private String codeCSS = new String();
-    private String soloTags = new String();
+    private String soloTags[];
 
     /*
         Индексовые переменные
@@ -37,7 +37,7 @@ public class MainApp extends Application {
         this.primaryStage.setTitle("CSSGenerator");
         try {
             codeHTML = new Scanner(file).useDelimiter("\\Z").next();
-            soloTags = new Scanner(fileSoloTags).useDelimiter("\\Z").next();
+            soloTags = new Scanner(fileSoloTags).useDelimiter("\\Z").next().split(" ");
         } catch (Exception ex) {
         }
         chooseTag();
@@ -91,7 +91,6 @@ public class MainApp extends Application {
                 break;
             }
             if (checkCurrent != -1) { // если это начало тега а не конец или комментарий, то
-                System.out.println(codeHTML.charAt(iCurrent));
                 Tag tempTag = addTag(iCurrent); // Получаем текущий тег
                 iCurrent++; // меняем указатель
                 tag =  new Tag(tempTag.getName(), tempTag.getClass_tag(), tempTag.getId());
@@ -106,11 +105,13 @@ public class MainApp extends Application {
             else {
                 iCurrent++; // двигаем указатель на один вперед
                 int l = iCurrent;
+                if (isSoloTag(tag)) {
+                    iCurrent = l -= 2;
+                }
                 l = searchStartTagBracket(l) + 2; // находим начало следующего тега
-                System.out.println(parent.getName());
-                System.out.println(codeHTML.substring(l, l + parent.getName().length() + 1));
-                System.out.println(codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName()));
-                if (codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName()) || isSoloTag(tag)) {
+                /*System.out.println(parent.getName() + " + " + codeHTML.substring(l, l + parent.getName().length() + 1) +
+                " = " + codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName()));*/
+                if (codeHTML.substring(l, l + parent.getName().length() + 1).equals("/"+parent.getName())) {
                     break;
                 }
             }
@@ -219,8 +220,6 @@ public class MainApp extends Application {
      */
     private boolean haveEnd(String text) {
         int current = codeHTML.indexOf("</",iCurrent);
-        System.out.println(codeHTML.charAt(current));
-        System.out.println(codeHTML.substring(current, current + text.length() + 2));
         if (codeHTML.substring(current,current + text.length() + 2).indexOf("</"+text) != -1 ) {
             return true;  // есть дочерние елементы
         }
@@ -267,8 +266,10 @@ public class MainApp extends Application {
      * @return
      */
     private boolean isSoloTag(Tag temp) {
-        if(soloTags.indexOf(temp.getName()) != -1) {
-            return true;
+        for (int i = 0; i < soloTags.length; i++) {
+            if (soloTags[i].equals(temp.getName())) {
+                return true;
+            }
         }
         return false;
     }
@@ -309,7 +310,7 @@ public class MainApp extends Application {
         }
 
         int j = textAtrr.indexOf("id");  //  Находим начало идентификатора
-        if(j != -1) {
+        if(j != -1 && textAtrr.charAt(j+3) == '=') {
             attrValueEnd = searchEndAttr(j+4, textAtrr);  // Ищем конец значения атрибута
             tag.setId(textAtrr.substring(j + 4, attrValueEnd)); // Добавляем идентификатор
             сurrent = attrValueEnd + 1;
