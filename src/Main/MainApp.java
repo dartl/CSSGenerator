@@ -1,12 +1,12 @@
 package Main;
 
+import controller.AllTags;
 import controller.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import model.AllTags;
 
 import java.io.File;
 import java.io.IOException;
