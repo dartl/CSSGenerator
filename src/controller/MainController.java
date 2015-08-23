@@ -12,6 +12,6 @@ public class MainController {
 
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
-        textAreaCode.setText(this.mainApp.getCodeHTML());
+        textAreaCode.setText(this.mainApp.getAllTags().getCodeHTML());
     }
 }
