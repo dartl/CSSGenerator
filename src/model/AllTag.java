@@ -1,11 +1,9 @@
-package controller;
-
-import model.Tag;
+package model;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class AllTags {
+public class AllTag {
     private List<Tag> tags = new LinkedList<Tag>(); // Список всех тегов
     private String codeHTML = new String();         // Код документа, а потом выходной код
     private String soloTags[];                      // Массив одинарных тегов
@@ -16,7 +14,7 @@ public class AllTags {
     private int iCurrent;              // Индекс текущего положения поиска
     private int iTab = 0;              // Уровень табуляции
 
-    public AllTags(String codeHTML, String[] soloTags) {
+    public AllTag(String codeHTML, String[] soloTags) {
         this.codeHTML = codeHTML;
         this.soloTags = soloTags;
     }

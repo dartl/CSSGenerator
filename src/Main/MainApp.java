@@ -1,12 +1,12 @@
 package Main;
 
-import controller.AllTags;
 import controller.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import model.AllTag;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,14 +19,14 @@ public class MainApp extends Application {
 
     private File file = new File("F:\\JavaProjects\\CSSGenerator\\txt\\1.html");
     private File fileSoloTags = new File("F:\\JavaProjects\\CSSGenerator\\src\\soloTags.txt");
-    private AllTags allTags;
+    private AllTag allTags;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("CSSGenerator");
         try {
-            allTags = new AllTags(new Scanner(file).useDelimiter("\\Z").next(),
+            allTags = new AllTag(new Scanner(file).useDelimiter("\\Z").next(),
                     new Scanner(fileSoloTags).useDelimiter("\\Z").next().split(" "));
         } catch (Exception ex) {
         }
@@ -35,11 +35,11 @@ public class MainApp extends Application {
         initRootLayout();
     }
 
-    public AllTags getAllTags() {
+    public AllTag getAllTags() {
         return allTags;
     }
 
-    public void setAllTags(AllTags allTags) {
+    public void setAllTags(AllTag allTags) {
         this.allTags = allTags;
     }
 
